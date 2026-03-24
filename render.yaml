@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: agent-erp
+    runtime: python
+    buildCommand: bash build.sh
+    startCommand: python -m backend.demo_server
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: NODE_VERSION
+        value: "20"

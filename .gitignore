@@ -1,0 +1,11 @@
+node_modules/
+build/
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+target/
+dbt_packages/
+*.egg-info/
+dist/

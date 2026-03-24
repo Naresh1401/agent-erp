@@ -1,0 +1,16 @@
+version: 2
+
+sources:
+  - name: erp
+    schema: public
+    tables:
+      - name: orders
+      - name: order_items
+      - name: products
+      - name: customers
+      - name: suppliers
+      - name: inventory_transactions
+      - name: agent_tasks
+      - name: agent_logs
+      - name: documents
+      - name: anomalies
