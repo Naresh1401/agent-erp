@@ -374,102 +374,103 @@ async def root():
     return {"service": "AgentERP", "docs": "/docs"}
 
 
-# ── Seed Demo Data ───────────────────────────────────────────
+# ── Seed Demo Data (step-by-step) ────────────────────────────
 
-@app.post("/api/v1/seed")
-async def seed_demo_data():
-    """Populate stores with realistic sample data for testing."""
-    # Clear existing
-    SUPPLIERS.clear()
-    PRODUCTS.clear()
-    CUSTOMERS.clear()
-    ORDERS.clear()
-    TASKS.clear()
-    DOCUMENTS.clear()
+SEED_STEPS = ["suppliers", "products", "customers", "orders", "agent_tasks"]
 
-    # Suppliers
-    SUPPLIERS.extend([
-        {"id": _id(), "name": "Acme Industrial Supply", "contact_email": "sales@acme.com", "phone": "214-555-0100", "lead_time_days": 5},
-        {"id": _id(), "name": "Pacific Steel Distributors", "contact_email": "orders@pacsteel.com", "phone": "310-555-0200", "lead_time_days": 7},
-        {"id": _id(), "name": "GlobalFast Electronics", "contact_email": "supply@gfe.com", "phone": "408-555-0300", "lead_time_days": 3},
-        {"id": _id(), "name": "MidWest Fastener Co.", "contact_email": "info@mwfast.com", "phone": "312-555-0400", "lead_time_days": 4},
-    ])
+@app.post("/api/v1/seed/{step}")
+async def seed_step(step: str):
+    """Seed one category at a time. Steps: suppliers, products, customers, orders, agent_tasks."""
+    if step not in SEED_STEPS:
+        raise HTTPException(status_code=400, detail=f"Unknown step: {step}. Valid: {SEED_STEPS}")
 
-    # Products (14 items across categories with realistic stock levels)
-    PRODUCTS.extend([
-        {"id": _id(), "sku": "BOLT-M8", "name": "Industrial Bolt M8x40 Grade 8.8", "description": "Zinc-plated hex bolt", "category": "Fasteners", "unit_price": 0.45, "cost_price": 0.22, "quantity_on_hand": 12500, "reorder_point": 5000, "is_active": True},
-        {"id": _id(), "sku": "BOLT-M10", "name": "Industrial Bolt M10x50 Grade 8.8", "description": "Zinc-plated hex bolt", "category": "Fasteners", "unit_price": 0.65, "cost_price": 0.32, "quantity_on_hand": 8400, "reorder_point": 3000, "is_active": True},
-        {"id": _id(), "sku": "NUT-M8", "name": "Hex Nut M8 Grade 8", "description": "Zinc-plated hex nut", "category": "Fasteners", "unit_price": 0.15, "cost_price": 0.07, "quantity_on_hand": 0, "reorder_point": 5000, "is_active": True},
-        {"id": _id(), "sku": "PLATE-A36", "name": "Steel Plate A36 12x12\"", "description": "Hot-rolled structural steel", "category": "Raw Materials", "unit_price": 89.99, "cost_price": 52.00, "quantity_on_hand": 15, "reorder_point": 20, "is_active": True},
-        {"id": _id(), "sku": "PLATE-SS304", "name": "Stainless Steel Plate 304 4x8", "description": "Austenitic stainless steel", "category": "Raw Materials", "unit_price": 245.00, "cost_price": 165.00, "quantity_on_hand": 42, "reorder_point": 10, "is_active": True},
-        {"id": _id(), "sku": "PIPE-SCH40", "name": "Steel Pipe Schedule 40 2\"", "description": "Carbon steel pipe", "category": "Raw Materials", "unit_price": 34.25, "cost_price": 18.50, "quantity_on_hand": 320, "reorder_point": 50, "is_active": True},
-        {"id": _id(), "sku": "CABLE-CAT6", "name": "Cable Cat6 1000ft Plenum", "description": "UTP networking cable", "category": "Electronics", "unit_price": 125.00, "cost_price": 72.00, "quantity_on_hand": 850, "reorder_point": 50, "is_active": True},
-        {"id": _id(), "sku": "CABLE-FIBER", "name": "Fiber Optic Cable OM3 500m", "description": "Multi-mode fiber optic cable", "category": "Electronics", "unit_price": 389.00, "cost_price": 210.00, "quantity_on_hand": 28, "reorder_point": 15, "is_active": True},
-        {"id": _id(), "sku": "WIDGET-A200", "name": "Widget A-200 Assembly", "description": "Precision assembly unit", "category": "Assemblies", "unit_price": 340.00, "cost_price": 185.00, "quantity_on_hand": 5, "reorder_point": 25, "is_active": True},
-        {"id": _id(), "sku": "WIDGET-B100", "name": "Widget B-100 Sub-Assembly", "description": "Component sub-assembly", "category": "Assemblies", "unit_price": 178.00, "cost_price": 95.00, "quantity_on_hand": 67, "reorder_point": 30, "is_active": True},
-        {"id": _id(), "sku": "MOTOR-12V", "name": "DC Motor 12V 500RPM", "description": "Brushed DC motor", "category": "Electronics", "unit_price": 24.99, "cost_price": 12.50, "quantity_on_hand": 230, "reorder_point": 100, "is_active": True},
-        {"id": _id(), "sku": "SENSOR-TEMP", "name": "Temperature Sensor PT100", "description": "RTD temperature sensor", "category": "Electronics", "unit_price": 45.00, "cost_price": 22.00, "quantity_on_hand": 180, "reorder_point": 75, "is_active": True},
-        {"id": _id(), "sku": "WELD-ER70", "name": "Welding Wire ER70S-6 0.035\"", "description": "MIG welding wire", "category": "Consumables", "unit_price": 45.00, "cost_price": 28.00, "quantity_on_hand": 95, "reorder_point": 40, "is_active": True},
-        {"id": _id(), "sku": "ALUM-6061", "name": "Aluminum Bar 6061-T6 1\"x3\"", "description": "Extruded aluminum bar", "category": "Raw Materials", "unit_price": 78.50, "cost_price": 42.00, "quantity_on_hand": 55, "reorder_point": 20, "is_active": True},
-    ])
+    if step == "suppliers":
+        SUPPLIERS.clear()
+        SUPPLIERS.extend([
+            {"id": _id(), "name": "Acme Industrial Supply", "contact_email": "sales@acme.com", "phone": "214-555-0100", "lead_time_days": 5},
+            {"id": _id(), "name": "Pacific Steel Distributors", "contact_email": "orders@pacsteel.com", "phone": "310-555-0200", "lead_time_days": 7},
+            {"id": _id(), "name": "GlobalFast Electronics", "contact_email": "supply@gfe.com", "phone": "408-555-0300", "lead_time_days": 3},
+            {"id": _id(), "name": "MidWest Fastener Co.", "contact_email": "info@mwfast.com", "phone": "312-555-0400", "lead_time_days": 4},
+        ])
+        return {"step": step, "count": len(SUPPLIERS)}
 
-    # Customers
-    CUSTOMERS.extend([
-        {"id": _id(), "name": "Widget Manufacturing Inc", "email": "orders@widget.com", "tier": "gold"},
-        {"id": _id(), "name": "TechParts Global", "email": "purchasing@techparts.com", "tier": "silver"},
-        {"id": _id(), "name": "BuildRight Construction", "email": "materials@buildright.com", "tier": "gold"},
-        {"id": _id(), "name": "Precision Dynamics", "email": "supply@precisiondyn.com", "tier": "platinum"},
-        {"id": _id(), "name": "Metro Assembly Co", "email": "procurement@metroasm.com", "tier": "bronze"},
-    ])
+    if step == "products":
+        PRODUCTS.clear()
+        PRODUCTS.extend([
+            {"id": _id(), "sku": "BOLT-M8", "name": "Industrial Bolt M8x40 Grade 8.8", "description": "Zinc-plated hex bolt", "category": "Fasteners", "unit_price": 0.45, "cost_price": 0.22, "quantity_on_hand": 12500, "reorder_point": 5000, "is_active": True},
+            {"id": _id(), "sku": "BOLT-M10", "name": "Industrial Bolt M10x50 Grade 8.8", "description": "Zinc-plated hex bolt", "category": "Fasteners", "unit_price": 0.65, "cost_price": 0.32, "quantity_on_hand": 8400, "reorder_point": 3000, "is_active": True},
+            {"id": _id(), "sku": "NUT-M8", "name": "Hex Nut M8 Grade 8", "description": "Zinc-plated hex nut", "category": "Fasteners", "unit_price": 0.15, "cost_price": 0.07, "quantity_on_hand": 0, "reorder_point": 5000, "is_active": True},
+            {"id": _id(), "sku": "PLATE-A36", "name": "Steel Plate A36 12x12\"", "description": "Hot-rolled structural steel", "category": "Raw Materials", "unit_price": 89.99, "cost_price": 52.00, "quantity_on_hand": 15, "reorder_point": 20, "is_active": True},
+            {"id": _id(), "sku": "PLATE-SS304", "name": "Stainless Steel Plate 304 4x8", "description": "Austenitic stainless steel", "category": "Raw Materials", "unit_price": 245.00, "cost_price": 165.00, "quantity_on_hand": 42, "reorder_point": 10, "is_active": True},
+            {"id": _id(), "sku": "PIPE-SCH40", "name": "Steel Pipe Schedule 40 2\"", "description": "Carbon steel pipe", "category": "Raw Materials", "unit_price": 34.25, "cost_price": 18.50, "quantity_on_hand": 320, "reorder_point": 50, "is_active": True},
+            {"id": _id(), "sku": "CABLE-CAT6", "name": "Cable Cat6 1000ft Plenum", "description": "UTP networking cable", "category": "Electronics", "unit_price": 125.00, "cost_price": 72.00, "quantity_on_hand": 850, "reorder_point": 50, "is_active": True},
+            {"id": _id(), "sku": "CABLE-FIBER", "name": "Fiber Optic Cable OM3 500m", "description": "Multi-mode fiber optic cable", "category": "Electronics", "unit_price": 389.00, "cost_price": 210.00, "quantity_on_hand": 28, "reorder_point": 15, "is_active": True},
+            {"id": _id(), "sku": "WIDGET-A200", "name": "Widget A-200 Assembly", "description": "Precision assembly unit", "category": "Assemblies", "unit_price": 340.00, "cost_price": 185.00, "quantity_on_hand": 5, "reorder_point": 25, "is_active": True},
+            {"id": _id(), "sku": "WIDGET-B100", "name": "Widget B-100 Sub-Assembly", "description": "Component sub-assembly", "category": "Assemblies", "unit_price": 178.00, "cost_price": 95.00, "quantity_on_hand": 67, "reorder_point": 30, "is_active": True},
+            {"id": _id(), "sku": "MOTOR-12V", "name": "DC Motor 12V 500RPM", "description": "Brushed DC motor", "category": "Electronics", "unit_price": 24.99, "cost_price": 12.50, "quantity_on_hand": 230, "reorder_point": 100, "is_active": True},
+            {"id": _id(), "sku": "SENSOR-TEMP", "name": "Temperature Sensor PT100", "description": "RTD temperature sensor", "category": "Electronics", "unit_price": 45.00, "cost_price": 22.00, "quantity_on_hand": 180, "reorder_point": 75, "is_active": True},
+            {"id": _id(), "sku": "WELD-ER70", "name": "Welding Wire ER70S-6 0.035\"", "description": "MIG welding wire", "category": "Consumables", "unit_price": 45.00, "cost_price": 28.00, "quantity_on_hand": 95, "reorder_point": 40, "is_active": True},
+            {"id": _id(), "sku": "ALUM-6061", "name": "Aluminum Bar 6061-T6 1\"x3\"", "description": "Extruded aluminum bar", "category": "Raw Materials", "unit_price": 78.50, "cost_price": 42.00, "quantity_on_hand": 55, "reorder_point": 20, "is_active": True},
+        ])
+        return {"step": step, "count": len(PRODUCTS)}
 
-    # Orders (25 with various statuses)
-    statuses = ["draft", "pending_review", "approved", "processing", "shipped", "delivered", "cancelled", "returned"]
-    for _ in range(25):
-        status = random.choice(statuses)
-        total = round(random.uniform(100, 15000), 2)
-        tax = round(total * 0.08, 2)
-        shipping = 0.0 if total > 500 else 25.00
-        ORDERS.append({
-            "id": _id(),
-            "order_number": f"ORD-{random.randint(10000, 99999)}",
-            "customer_id": random.choice(CUSTOMERS)["id"],
-            "status": status,
-            "total_amount": round(total + tax + shipping, 2),
-            "tax_amount": tax,
-            "shipping_amount": shipping,
-            "source": random.choice(["manual", "agent", "agent", "api"]),
-            "created_at": _past(random.randint(0, 60)),
-        })
+    if step == "customers":
+        CUSTOMERS.clear()
+        CUSTOMERS.extend([
+            {"id": _id(), "name": "Widget Manufacturing Inc", "email": "orders@widget.com", "tier": "gold"},
+            {"id": _id(), "name": "TechParts Global", "email": "purchasing@techparts.com", "tier": "silver"},
+            {"id": _id(), "name": "BuildRight Construction", "email": "materials@buildright.com", "tier": "gold"},
+            {"id": _id(), "name": "Precision Dynamics", "email": "supply@precisiondyn.com", "tier": "platinum"},
+            {"id": _id(), "name": "Metro Assembly Co", "email": "procurement@metroasm.com", "tier": "bronze"},
+        ])
+        return {"step": step, "count": len(CUSTOMERS)}
 
-    # Sample agent tasks
-    agent_types = ["document_processor", "order_agent", "inventory_agent", "migration_agent"]
-    for i in range(10):
-        at = agent_types[i % 4]
-        tokens = random.randint(800, 12000)
-        TASKS.append({
-            "id": _id(),
-            "agent_type": at,
-            "status": "completed",
-            "input_data": {},
-            "output_data": {"steps": [{"name": "step_1", "model": "gpt-4o", "tokens_in": tokens // 2, "tokens_out": tokens // 2, "duration_ms": random.randint(500, 4000)}]},
-            "tokens_used": tokens,
-            "cost_usd": round(tokens * 0.00002, 4),
-            "started_at": _past(random.randint(0, 30)),
-            "completed_at": _past(random.randint(0, 30)),
-            "created_at": _past(random.randint(0, 30)),
-            "error_message": None,
-        })
+    if step == "orders":
+        ORDERS.clear()
+        statuses = ["draft", "pending_review", "approved", "processing", "shipped", "delivered", "cancelled", "returned"]
+        for _ in range(25):
+            status = random.choice(statuses)
+            total = round(random.uniform(100, 15000), 2)
+            tax = round(total * 0.08, 2)
+            shipping = 0.0 if total > 500 else 25.00
+            ORDERS.append({
+                "id": _id(),
+                "order_number": f"ORD-{random.randint(10000, 99999)}",
+                "customer_id": random.choice(CUSTOMERS)["id"] if CUSTOMERS else _id(),
+                "status": status,
+                "total_amount": round(total + tax + shipping, 2),
+                "tax_amount": tax,
+                "shipping_amount": shipping,
+                "source": random.choice(["manual", "agent", "agent", "api"]),
+                "created_at": _past(random.randint(0, 60)),
+            })
+        return {"step": step, "count": len(ORDERS)}
 
-    return {
-        "message": "Demo data seeded successfully",
-        "counts": {
-            "suppliers": len(SUPPLIERS),
-            "products": len(PRODUCTS),
-            "customers": len(CUSTOMERS),
-            "orders": len(ORDERS),
-            "agent_tasks": len(TASKS),
-        },
-    }
+    if step == "agent_tasks":
+        TASKS.clear()
+        agent_types = ["document_processor", "order_agent", "inventory_agent", "migration_agent"]
+        for i in range(10):
+            at = agent_types[i % 4]
+            tokens = random.randint(800, 12000)
+            TASKS.append({
+                "id": _id(),
+                "agent_type": at,
+                "status": "completed",
+                "input_data": {},
+                "output_data": {"steps": [{"name": "step_1", "model": "gpt-4o", "tokens_in": tokens // 2, "tokens_out": tokens // 2, "duration_ms": random.randint(500, 4000)}]},
+                "tokens_used": tokens,
+                "cost_usd": round(tokens * 0.00002, 4),
+                "started_at": _past(random.randint(0, 30)),
+                "completed_at": _past(random.randint(0, 30)),
+                "created_at": _past(random.randint(0, 30)),
+                "error_message": None,
+            })
+        return {"step": step, "count": len(TASKS)}
+
+@app.get("/api/v1/seed/steps")
+async def seed_steps():
+    """Return the ordered list of seed steps."""
+    return {"steps": SEED_STEPS}
 
 
 @app.post("/api/v1/reset")

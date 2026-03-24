@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { fetchDashboard, seedDemoData, resetData } from "../services/api";
+import { fetchDashboard, seedStep, resetData } from "../services/api";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -53,6 +53,15 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [seeding, setSeeding] = useState(false);
+  const [seedProgress, setSeedProgress] = useState<string>("");
+  const [seedDone, setSeedDone] = useState(0);
+  const SEED_STEPS = [
+    { key: "suppliers", label: "Suppliers" },
+    { key: "products", label: "Products" },
+    { key: "customers", label: "Customers" },
+    { key: "orders", label: "Orders" },
+    { key: "agent_tasks", label: "Agent Tasks" },
+  ];
 
   const loadDashboard = (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -67,11 +76,24 @@ export default function Dashboard() {
       });
   };
 
-  const handleSeed = () => {
+  const handleSeed = async () => {
     setSeeding(true);
-    seedDemoData()
-      .then(() => loadDashboard(true))
-      .finally(() => setSeeding(false));
+    setSeedDone(0);
+    for (let i = 0; i < SEED_STEPS.length; i++) {
+      const step = SEED_STEPS[i];
+      setSeedProgress(`Loading ${step.label}...`);
+      try {
+        await seedStep(step.key);
+      } catch {}
+      setSeedDone(i + 1);
+      // Refresh dashboard after each step so numbers update live
+      try {
+        const res = await fetchDashboard();
+        setData(res.data);
+      } catch {}
+    }
+    setSeedProgress("");
+    setSeeding(false);
   };
 
   const handleReset = () => {
@@ -134,19 +156,27 @@ export default function Dashboard() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold">Dashboard</h2>
         <div className="flex items-center gap-2">
-          {data.total_orders === 0 && data.total_products === 0 ? (
+          {data.total_orders === 0 && data.total_products === 0 && !seeding ? (
             <button
               onClick={handleSeed}
               disabled={seeding}
               className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
             >
-              {seeding ? (
-                <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-              ) : (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
-              )}
-              {seeding ? "Loading Data…" : "Load Demo Data"}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+              Load Demo Data
             </button>
+          ) : seeding ? (
+            <div className="flex items-center gap-3 px-4 py-2 bg-slate-800 border border-emerald-500/30 rounded-lg text-sm">
+              <svg className="w-4 h-4 animate-spin text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+              <span className="text-emerald-400 font-medium">{seedProgress}</span>
+              <span className="text-slate-400">({seedDone}/{SEED_STEPS.length})</span>
+              <div className="w-24 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-emerald-400 rounded-full transition-all duration-500"
+                  style={{ width: `${(seedDone / SEED_STEPS.length) * 100}%` }}
+                />
+              </div>
+            </div>
           ) : (
             <button
               onClick={handleReset}
@@ -180,7 +210,7 @@ export default function Dashboard() {
       </div>
 
       {/* Empty state banner */}
-      {data.total_orders === 0 && data.total_products === 0 && (
+      {data.total_orders === 0 && data.total_products === 0 && !seeding && (
         <div className="mb-8 p-6 bg-slate-800 border border-dashed border-slate-600 rounded-xl text-center">
           <p className="text-slate-400 text-lg mb-2">No data yet</p>
           <p className="text-slate-500 text-sm mb-4">Click <strong className="text-emerald-400">"Load Demo Data"</strong> above to populate the dashboard with sample products, orders, customers, and agent tasks.</p>

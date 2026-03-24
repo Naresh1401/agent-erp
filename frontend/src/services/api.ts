@@ -54,7 +54,8 @@ export const searchDocuments = (query: string, limit = 10) =>
   api.post("/documents/search", { query, limit });
 
 // ── Data Management ────────────────────────────────────────
-export const seedDemoData = () => api.post("/seed");
+export const seedStep = (step: string) => api.post(`/seed/${step}`);
+export const getSeedSteps = () => api.get("/seed/steps");
 export const resetData = () => api.post("/reset");
 
 export default api;
