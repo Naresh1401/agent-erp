@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { fetchDashboard } from "../services/api";
+import { fetchDashboard, seedDemoData, resetData } from "../services/api";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -52,6 +52,7 @@ export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [seeding, setSeeding] = useState(false);
 
   const loadDashboard = (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -64,6 +65,17 @@ export default function Dashboard() {
         setLoading(false);
         setRefreshing(false);
       });
+  };
+
+  const handleSeed = () => {
+    setSeeding(true);
+    seedDemoData()
+      .then(() => loadDashboard(true))
+      .finally(() => setSeeding(false));
+  };
+
+  const handleReset = () => {
+    resetData().then(() => loadDashboard(true));
   };
 
   useEffect(() => {
@@ -121,27 +133,59 @@ export default function Dashboard() {
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold">Dashboard</h2>
-        <button
-          onClick={() => loadDashboard(true)}
-          disabled={refreshing}
-          className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-        >
-          <svg
-            className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        <div className="flex items-center gap-2">
+          {data.total_orders === 0 && data.total_products === 0 ? (
+            <button
+              onClick={handleSeed}
+              disabled={seeding}
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+            >
+              {seeding ? (
+                <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+              )}
+              {seeding ? "Loading Data…" : "Load Demo Data"}
+            </button>
+          ) : (
+            <button
+              onClick={handleReset}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-red-600 rounded-lg text-sm font-medium transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+              Reset Data
+            </button>
+          )}
+          <button
+            onClick={() => loadDashboard(true)}
+            disabled={refreshing}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-            />
-          </svg>
-          {refreshing ? "Refreshing…" : "Refresh"}
-        </button>
+            <svg
+              className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+            {refreshing ? "Refreshing…" : "Refresh"}
+          </button>
+        </div>
       </div>
+
+      {/* Empty state banner */}
+      {data.total_orders === 0 && data.total_products === 0 && (
+        <div className="mb-8 p-6 bg-slate-800 border border-dashed border-slate-600 rounded-xl text-center">
+          <p className="text-slate-400 text-lg mb-2">No data yet</p>
+          <p className="text-slate-500 text-sm mb-4">Click <strong className="text-emerald-400">"Load Demo Data"</strong> above to populate the dashboard with sample products, orders, customers, and agent tasks.</p>
+        </div>
+      )}
 
       {/* Stats row */}
       <div className="grid grid-cols-5 gap-4 mb-8">

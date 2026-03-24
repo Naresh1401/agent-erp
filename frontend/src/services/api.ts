@@ -53,4 +53,8 @@ export const uploadDocument = (filename: string, rawText: string) =>
 export const searchDocuments = (query: string, limit = 10) =>
   api.post("/documents/search", { query, limit });
 
+// ── Data Management ────────────────────────────────────────
+export const seedDemoData = () => api.post("/seed");
+export const resetData = () => api.post("/reset");
+
 export default api;
