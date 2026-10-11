@@ -20,6 +20,10 @@ jobs:
     uses: Naresh1401/github-cicd-workflows/.github/workflows/python-ci.yml@v1
     with:
       install-command: python -m pip install -r backend/requirements.txt
+      # The agents create their LLM clients at import time; the tests don't call the APIs
+      env-vars: |
+        OPENAI_API_KEY=sk-placeholder
+        ANTHROPIC_API_KEY=sk-placeholder
       # The Playwright end-to-end tests need a browser and the running stack
       test-command: python -m pytest tests --ignore=tests/playwright
 
@@ -28,6 +32,8 @@ jobs:
     uses: Naresh1401/github-cicd-workflows/.github/workflows/node-ci.yml@v1
     with:
       working-directory: frontend
+      # The frontend has no tests yet (react-scripts test exits with an error)
+      test-command: ""
 
   container:
     name: Docker image
