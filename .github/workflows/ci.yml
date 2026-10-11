@@ -18,6 +18,10 @@ jobs:
   python:
     name: Python
     uses: Naresh1401/github-cicd-workflows/.github/workflows/python-ci.yml@v1
+    with:
+      install-command: python -m pip install -r backend/requirements.txt
+      # The Playwright end-to-end tests need a browser and the running stack
+      test-command: python -m pytest tests --ignore=tests/playwright
 
   node:
     name: Node
