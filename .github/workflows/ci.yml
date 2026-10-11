@@ -24,6 +24,7 @@ jobs:
       env-vars: |
         OPENAI_API_KEY=sk-placeholder
         ANTHROPIC_API_KEY=sk-placeholder
+        OTEL_SDK_DISABLED=true
       # The Playwright end-to-end tests need a browser and the running stack
       test-command: python -m pytest tests --ignore=tests/playwright
 
