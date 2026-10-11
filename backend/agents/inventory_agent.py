@@ -186,13 +186,13 @@ def build_inventory_agent_graph() -> StateGraph:
 
     graph.add_node("analyze_levels", analyze_levels)
     graph.add_node("detect_patterns", detect_patterns)
-    graph.add_node("forecast", generate_forecast)
+    graph.add_node("generate_forecast", generate_forecast)
     graph.add_node("summarize", generate_summary)
 
     graph.set_entry_point("analyze_levels")
     graph.add_edge("analyze_levels", "detect_patterns")
-    graph.add_edge("detect_patterns", "forecast")
-    graph.add_edge("forecast", "summarize")
+    graph.add_edge("detect_patterns", "generate_forecast")
+    graph.add_edge("generate_forecast", "summarize")
     graph.add_edge("summarize", END)
 
     return graph.compile()
